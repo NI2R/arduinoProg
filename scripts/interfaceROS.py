@@ -9,34 +9,32 @@ import comArduino
 
 from std_msgs.msg import String as ROS_String
 from geometry_msgs.msg import Pose as ROS_Pose
+from std_msgs.msg import String
+from std_msgs.msg import Int16
 
 class Robot_properties:
 	def __init__(self):
+		self.messageArduino = ""
 
-		self.publish_topic = 'arduinoState' #nom du topic que je publie
+		self.publish_arduino = 'arduinoOrder' #nom du topic que je publie
+		#self.pubArduino = rospy.Publisher(self.publish_arduino, String, queue_size=10)
+		self.pubArduino = rospy.Publisher(self.publish_arduino, Int16, queue_size=10)
+		
+		rospy.Subscriber("/arduinoState", Int16, self.subscrib)	
 
-		self.pub = rospy.Publisher(self.publish_topic, ROS_String, queue_size=1)
+	def subscrib(self, data):
+		self.messageArduino = data
 
-	#def subscrib(self, ros_data):
-
-	def publish(self, message): #x sera la position et y la couleur
-		Msg = ROS_String
-		Msg = message  
-		self.pub.publish(Msg)
-
-	def publishImage(self, image):
-		self.pubImg.publish(image)
-
-
+	def publish(self, message): 
+		print message
+		self.pubArduino.publish(message)
 
 def main():
-	rospy.init_node('Traite_Image', anonymous=True)
-	Objtester = comArduino.Tester() #objet de type objet
-	rospy.sleep(5)
+	rospy.init_node('Traite_arduinoProg', anonymous=True)
+	Objtester = comArduino.TesterArduino() #objet de type objet
 	while not rospy.is_shutdown():
 		Objtester.updater()
 		rospy.sleep(0.03)
-
 
 if __name__ ==  '__main__':
 	try:

@@ -1,6 +1,9 @@
+
 #include <ros.h>
 #include <std_msgs/String.h>
-#include <std_msgs/UInt16.h>
+#include <std_msgs/Int16.h>
+//#include <std_msgs/Int32.h>
+
 #include <geometry_msgs/Pose.h>
 
 #include "Arm.h"
@@ -13,94 +16,155 @@ Setup SetupRobot;
 Elevator ElevatorRobot;
 Pompe PompeRobot;
 Arm ArmRobot; 
-//Tirette TiretteRobot; 
 Drapeau DrapeauAction;
 Manche MancheAction;
 
-ros::NodeHandle node_handle;
+ros::NodeHandle  nh;
 
-std_msgs::String Out_msg;
-std_msgs::String Order_msg;
-geometry_msgs::Pose Posi_msg;
-int posiGoblet = 5;
-int couleurGoblet = 0;
-int couleurCote = 2;
+bool traitementROS = false;
+bool BlueSide = false;
 
 
-void subscriberOrder(const std_msgs::String& Order_msg) {
-  //posiGoblet = 0;
-  String message = Order_msg.data;
-  message.c_str();
-  traitementMessage(message);
+std_msgs::Int16 response;
+std_msgs::Int16 valVision;
 
-}
 
-void subscriberPosi(const geometry_msgs::Pose& Posi_msg) {
-  posiGoblet = Posi_msg.position.x;
-  if (posiGoblet > 500){
-      traitementMessage("test");
-  }else{
-      traitementMessage("");
+ros::Publisher arduinoState("arduinoState", &response);
+
+void subscriberOrder( const std_msgs::Int16 &msg){
+  traitementROS = true;
+  response.data = 2;
+  arduinoState.publish( &response);
+  nh.spinOnce();
+  
+  switch (msg.data) {
+  case 0:
+    //Aucun ordre
+    break;
+  case 1://Init
+    ArmRobot.InitArm();
+    break;
+  case 2://Mise en parking
+    ArmRobot.Parking();
+    break;
+  case 3://Mise en préparation transport
+    ArmRobot.Transport();
+    break;
+  case 4:
+    ShootPhoto();
+    break;
+  case 5:
+    GobeletEnPosi();
+    break;
+  case 6:
+    //GetGobelet
+    break;
+  case 7:
+    //AlumPhare
+    break;
+  case 8:
+    //Drapeau
+    break;
+  case 9:
+    //MancheOut
+    break;
+  case 10:
+    //MancheIn
+    break;
+  case 11:
+    //OutAll
+    break;
+  case 12:
+    //Out2
+    break;
+  case 13:
+    //Out3
+    break;
+  case 14://Stop tout
+    ElevatorRobot.PuissanceOFF();
+    ElevatorRobot.LedOFF();
+    break;
+  default:
+    digitalWrite(22, HIGH-digitalRead(22));   // blink the led
+    break;
   }
-  delay(1000);
-  //posiGoblet = Posi_msg.position.x;
-  //couleurGoblet = Posi_msg.position.y;
-
+  response.data = 1;
+  arduinoState.publish( &response);
+  traitementROS = false;
 }
 
-ros::Publisher out_publisher("arduinoState", &Out_msg);
-ros::Subscriber<std_msgs::String> order_subscriber("arduinoAction", &subscriberOrder);
-ros::Subscriber<geometry_msgs::Pose> posi_subscriber("positionGoblet", &subscriberPosi);
+void subscriberVision( const std_msgs::Int16 &msg){
+  valVision = msg;
+//if(msg.position.y != 2){
+  digitalWrite(22, HIGH-digitalRead(22));   // blink the led
+//}
+}
+
+ros::Subscriber<std_msgs::Int16> order_sub("arduinoOrder", &subscriberOrder);
+//ros::Subscriber<geometry_msgs::Pose> vision_sub("positionGoblet", &subscriberVision);
+ros::Subscriber<std_msgs::Int16> vision_sub("positionGoblet", &subscriberVision);
+
 
 void setup()
-{  
-  pinMode(LED_BUILTIN, OUTPUT);
-  node_handle.initNode();
-  node_handle.advertise(out_publisher);//publish
-  node_handle.subscribe(posi_subscriber);
-  node_handle.subscribe(order_subscriber);
+{
+  pinMode(22, OUTPUT);
+  nh.initNode();
+  nh.advertise(arduinoState);
+
+  response.data = 1;
+  arduinoState.publish( &response);
+  nh.spinOnce();
+
+  response.data = 1;
+  
+  nh.subscribe(order_sub);
+  nh.subscribe(vision_sub);
 
   SetupRobot.SetAll();
-  //ProgTest();
-  delay(1000);
 
-  digitalWrite(LED_BUILTIN, LOW); 
-  ElevatorRobot.LedON();
 }
 
 void loop()
-{ 
+{
+  if(traitementROS==false){
+   nh.spinOnce();
+ }
   
-  node_handle.spinOnce();
+//  arduinoState.publish( &response);
+//  nh.spinOnce();
+//  response.data = 1;
 
+  delay(100);
 }
 
-void publishMessage(int etat){ //permet de publier ceux que je veux vers ROS
+void ShootPhoto(){
+  ElevatorRobot.LedON();
+  ElevatorRobot.GetGobelet();
+  delay(500);
+  ForeArmAction.PosiNeutre();
+  delay(500);
+}
 
-  switch(etat){
-    case 0:
-      Out_msg.data = "attente ordre";
-      break;
-    case 1:
-      Out_msg.data = "action en cours";
-      break;
-    case 2:
-      Out_msg.data = "action terminee";
-      break;
-  }
-  out_publisher.publish(&Out_msg);
-  node_handle.spinOnce();
+void GobeletEnPosi(){
+  //nh.spinOnce();
+  int ValGobletVision = valVision.data; 
+  ArmRobot.GetGobelet(900,true,BlueSide);
+//  if(ValGobletVision > 2000){
+//      ArmRobot.GetGobelet(900,true,BlueSide);
+//  }else if(ValGobletVision < 2000 and ValGobletVision > 1000){
+//      ArmRobot.GetGobelet(900,false,BlueSide);
+//  }
   
 }
 
-void traitementMessage(String message){//fonction dans laquel je dois traiter les infos reçu de ROS
-  if (message  == "test") {
-    digitalWrite(LED_BUILTIN, HIGH); 
-  } else {
-    digitalWrite(LED_BUILTIN, LOW);
-  }
-  
-}
+
+
+
+
+
+
+
+
 
 
 void ProgTest(){
@@ -175,12 +239,8 @@ delay(1000);
 ElevatorRobot.LedON();
 delay(500);
 //ArmRobot.GetGobelet(posiGoblet,0);
-for(int i = 0; i<100; i++){
-  for(int j = 0; j<100;j++){
-      node_handle.spinOnce();
-      delay(1);
-  }
-  ArmRobot.GetGobelet(posiGoblet,couleurGoblet,couleurCote);
+
+  //ArmRobot.GetGobelet(posiGoblet,couleurGoblet,couleurCote);
 //  if(posiGoblet =! 0){
 //    ElevatorRobot.LedOFF();
 //    delay(10);
@@ -196,7 +256,7 @@ for(int i = 0; i<100; i++){
 //    ElevatorRobot.LedON();
 //  }
   delay(500);
-}
+
 //ElevatorRobot.LedOFF();
 delay(5000);
 ElevatorRobot.PuissanceOFF();
