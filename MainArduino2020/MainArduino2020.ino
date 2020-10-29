@@ -36,7 +36,6 @@ std_msgs::Int16 valVision;
 std_msgs::Bool TiretteStateRos;
 
 
-
 ros::Publisher arduinoState("arduinoState", &response);
 
 ros::Publisher arduinoTirette("StateTirette", &TiretteStateRos);
@@ -44,9 +43,9 @@ ros::Publisher arduinoTirette("StateTirette", &TiretteStateRos);
 
 void subscriberOrder( const std_msgs::Int16 &msg){
   traitementROS = true;
-  response.data = 2;
-  arduinoState.publish( &response);
-  nh.spinOnce();
+  //response.data = 2;
+  //arduinoState.publish( &response);
+  //nh.spinOnce();
   
   switch (msg.data) {
   case 0:
@@ -101,18 +100,18 @@ void subscriberOrder( const std_msgs::Int16 &msg){
     ElevatorRobot.LedOFF();
     break;
   default:
-    digitalWrite(22, HIGH-digitalRead(22));   // blink the led
+   // digitalWrite(22, HIGH-digitalRead(22));   // blink the led
     break;
   }
-  response.data = 1;
-  arduinoState.publish( &response);
+  //response.data = 1;
+  //arduinoState.publish( &response);
   traitementROS = false;
 }
 
 void subscriberVision( const std_msgs::Int16 &msg){
   valVision = msg;
 //if(msg.position.y != 2){
-  digitalWrite(22, HIGH-digitalRead(22));   // blink the led
+ // digitalWrite(22, HIGH-digitalRead(22));   // blink the led
 //}
 }
 
@@ -125,10 +124,11 @@ void setup()
 {
 
   pinMode(7, INPUT);//tirette
+  TiretteStateRos.data = false;
 
-  pinMode(22, OUTPUT);
+  //pinMode(22, OUTPUT);
   nh.initNode();
-  
+
   nh.advertise(arduinoTirette);
 
   nh.advertise(arduinoState);
@@ -162,8 +162,6 @@ void loop()
    TiretteStateRos.data = Tirette;
    arduinoTirette.publish(&TiretteStateRos); 
    nh.spinOnce();
-
-
 
   
 //  arduinoState.publish( &response);
