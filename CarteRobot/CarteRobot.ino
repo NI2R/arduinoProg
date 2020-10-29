@@ -92,8 +92,7 @@ void setup(){
   CapteurDAR.publish(&DARRos);
 
   nh.spinOnce();
-
-  //Serial.begin (9600);
+//Serial.begin (9600);
 
 }
 
@@ -104,7 +103,7 @@ void loop(){
   //AfficheCapteur();
   GetSwitchState();
   //AfficheSwitch();
-
+//
   arduinoTirette.publish(&TiretteStateRos); 
   arduinoClef.publish(&ClefStateRos); 
   arduinoCote.publish(&CoteStateRos); 

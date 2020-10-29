@@ -3,6 +3,8 @@
 #include <std_msgs/String.h>
 #include <std_msgs/Int16.h>
 //#include <std_msgs/Int32.h>
+#include <std_msgs/Bool.h>
+
 
 #include <geometry_msgs/Pose.h>
 
@@ -11,13 +13,16 @@
 #include "Manche.h"
 #include "Tirette.h"
 
-ForeArm ForeArmAction;
+ForeArm ForeArmAction; 
 Setup SetupRobot;
 Elevator ElevatorRobot;
 Pompe PompeRobot;
 Arm ArmRobot; 
 Drapeau DrapeauAction;
 Manche MancheAction;
+
+
+bool Tirette = false;
 
 ros::NodeHandle  nh;
 
@@ -28,8 +33,14 @@ bool BlueSide = false;
 std_msgs::Int16 response;
 std_msgs::Int16 valVision;
 
+std_msgs::Bool TiretteStateRos;
+
+
 
 ros::Publisher arduinoState("arduinoState", &response);
+
+ros::Publisher arduinoTirette("StateTirette", &TiretteStateRos);
+
 
 void subscriberOrder( const std_msgs::Int16 &msg){
   traitementROS = true;
@@ -64,6 +75,11 @@ void subscriberOrder( const std_msgs::Int16 &msg){
     break;
   case 8:
     //Drapeau
+        //ShootPhoto();
+
+    DrapeauAction.OutFlag();
+
+
     break;
   case 9:
     //MancheOut
@@ -107,8 +123,14 @@ ros::Subscriber<std_msgs::Int16> vision_sub("positionGoblet", &subscriberVision)
 
 void setup()
 {
+
+  pinMode(7, INPUT);//tirette
+
   pinMode(22, OUTPUT);
   nh.initNode();
+  
+  nh.advertise(arduinoTirette);
+
   nh.advertise(arduinoState);
 
   response.data = 1;
@@ -121,14 +143,28 @@ void setup()
   nh.subscribe(vision_sub);
 
   SetupRobot.SetAll();
+  DrapeauAction.InFlag();
 
 }
 
 void loop()
 {
   if(traitementROS==false){
-   nh.spinOnce();
+    response.data = 1;
+    arduinoState.publish( &response);
+    nh.spinOnce();
+ }else{
+    response.data = 2;
+    arduinoState.publish( &response);
+    nh.spinOnce();
  }
+   Tirette = digitalRead(7);
+   TiretteStateRos.data = Tirette;
+   arduinoTirette.publish(&TiretteStateRos); 
+   nh.spinOnce();
+
+
+
   
 //  arduinoState.publish( &response);
 //  nh.spinOnce();

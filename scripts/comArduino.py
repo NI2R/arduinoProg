@@ -44,18 +44,24 @@ class TesterArduino:
 		time.sleep(1)
 
 		#self.robot.publish(3)#Mise en position transport
-		while self.robot.messageArduino == 1:#attente de que l'arduino est termine
-			time.sleep(0.01)
+		#while self.robot.messageArduino == 1:#attente de que l'arduino est termine
+			#time.sleep(0.01)
 
 		time.sleep(1)
 
 		#self.robot.publish(4)#preparation photo
-		while self.robot.messageArduino == 1:#attente de que l'arduino est termine
-			time.sleep(0.01)
+		#while self.robot.messageArduino == 1:#attente de que l'arduino est termine
+			#time.sleep(0.01)
 
 		time.sleep(1)
 
-		self.robot.publish(5)#mise en position pour prise goblet
+		#self.robot.publish(5)#mise en position pour prise goblet
+		#while self.robot.messageArduino == 1:#attente de que l'arduino est termine
+			#time.sleep(0.01)
+
+		time.sleep(1)
+
+		self.robot.publish(8)#Drapeau
 		while self.robot.messageArduino == 1:#attente de que l'arduino est termine
 			time.sleep(0.01)
 
