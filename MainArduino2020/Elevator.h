@@ -23,6 +23,7 @@ class Elevator{
   void OutGobelet();
   void PosiManche();
   void PosiStart();
+  void PosiPhare();
 
 
   //////////////////A retirer/////////////////////////

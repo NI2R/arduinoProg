@@ -13,9 +13,9 @@ void Arm::SetArm(){
 }
 
 void Arm::InitArm(){
-  ElevatorRobot.LedON();
+  //ElevatorRobot.LedON();
   delay(500);
-  ElevatorRobot.LedOFF();
+  //ElevatorRobot.LedOFF();
   SetArm();
   delay(500);
   ElevatorRobot.InitialPosition();
@@ -43,7 +43,12 @@ void Arm::GetGobelet(int coordo, int couleur, int cote){
          ForeArmAction.MoveAndWait(coordo);
     }else{
       ForeArmAction.MoveAndWait(coordo+500);
-    }
+    } 
+}
 
+void Arm::AlumePhare(){
+    ElevatorRobot.PosiPhare();
+    delay(500);
+    ForeArmAction.PosiPhare();
     
 }

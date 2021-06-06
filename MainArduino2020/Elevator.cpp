@@ -121,6 +121,9 @@ void Elevator::PosiStart(){
   MoveTo(200);
 }
 
+void Elevator::PosiPhare(){
+  MoveTo(550);
+}
 
 
 

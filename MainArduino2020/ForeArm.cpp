@@ -37,6 +37,10 @@ void ForeArm::PosiDepose(){
   MoveAndWait(400);
 }
 
+void ForeArm::PosiPhare(){
+  MoveAndWait(500);
+}
+
 int ForeArm::Position(){
   return Dynamixel.readPosition(1);
 }

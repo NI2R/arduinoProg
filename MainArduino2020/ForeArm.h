@@ -16,6 +16,7 @@ public:
   void PosiMax();
   void PosiMin();
   void PosiDepose();
+  void PosiPhare();
   int Position();
   void Transport();
   void PosiRecup(double);

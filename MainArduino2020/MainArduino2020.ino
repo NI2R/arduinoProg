@@ -1,9 +1,11 @@
+#include <TimerOne.h>
 
 #include <ros.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Int16.h>
 //#include <std_msgs/Int32.h>
 #include <std_msgs/Bool.h>
+
 
 
 #include <geometry_msgs/Pose.h>
@@ -31,23 +33,114 @@ bool BlueSide = false;
 
 
 std_msgs::Int16 response;
-std_msgs::Int16 valVision;
 
-std_msgs::Bool TiretteStateRos;
+int valOrder = 0 ;
+int valVision = 0 ;
+int stateArduinoNow = 0;
+
+//std_msgs::Bool TiretteStateRos;
 
 
 ros::Publisher arduinoState("arduinoState", &response);
 
-ros::Publisher arduinoTirette("StateTirette", &TiretteStateRos);
+//ros::Publisher arduinoTirette("StateTirette", &TiretteStateRos);
 
 
 void subscriberOrder( const std_msgs::Int16 &msg){
+  valOrder = msg.data;
+  traitementROS = true;
+
+}
+
+void subscriberVision( const std_msgs::Int16 &msg){
+  valVision = msg.data;
+//if(msg.position.y != 2){
+ // digitalWrite(22, HIGH-digitalRead(22));   // blink the led
+//}
+}
+
+ros::Subscriber<std_msgs::Int16> order_sub("arduinoOrder", &subscriberOrder);
+ros::Subscriber<std_msgs::Int16> vision_sub("positionGoblet", &subscriberVision);
+
+
+void callbackSpinOnce()
+{
+  response.data = stateArduinoNow;
+  arduinoState.publish( &response);
+  nh.spinOnce();
+
+}
+
+void setup()
+{
+
+  nh.initNode();
+
+  //nh.advertise(arduinoTirette);
+
+  nh.advertise(arduinoState);
+
+  stateArduinoNow = 4;
+  //arduinoState.publish( &response);
+  //nh.spinOnce();
+
+  //response.data = 1;
+  
+  nh.subscribe(order_sub);
+  nh.subscribe(vision_sub);
+
+  pinMode(10, OUTPUT);
+  Timer1.initialize(10000);         // initialize timer1, and set a 1/2 second period        // initialize timer1, and set a 1/2 second period
+  Timer1.pwm(9, 512);                // setup pwm on pin 9, 50% duty cycle
+  Timer1.attachInterrupt(callbackSpinOnce);  // attaches callback() as a timer overflow interrupt
+
+  SetupRobot.SetAll();
+  ArmRobot.InitArm();
+  DrapeauAction.InFlag();
+  ArmRobot.AlumePhare();
+  //ElevatorRobot.PuissanceOFF();
+
+  //MancheAction.Out();
+//delay(2000);
+  //MancheAction.In();
+
+  //while(digitalRead(10)==true){
+  //  delay(500);
+  //}
+
+}
+
+void loop()
+{
+
+  if(traitementROS==false){
+    //response.data = 1;
+    //arduinoState.publish( &response);
+    //nh.spinOnce();
+ }else{
+    //response.data = 2;
+    //arduinoState.publish( &response);
+    //nh.spinOnce();
+    SwitchCase();
+ }
+  	//response.data =valVision;
+ 	//response.data =3;
+  	stateArduinoNow=valVision;
+  //arduinoState.publish( &response);
+  //nh.spinOnce();
+//  response.data = 1;
+
+  //delay(100);
+}
+
+void SwitchCase(){
+
   traitementROS = true;
   //response.data = 2;
   //arduinoState.publish( &response);
   //nh.spinOnce();
   
-  switch (msg.data) {
+  switch (valOrder) {
   case 0:
     //Aucun ordre
     break;
@@ -71,20 +164,18 @@ void subscriberOrder( const std_msgs::Int16 &msg){
     break;
   case 7:
     //AlumPhare
+    ArmRobot.AlumePhare();
     break;
   case 8:
-    //Drapeau
-        //ShootPhoto();
-
-    DrapeauAction.OutFlag();
-
-
+    //Libre
     break;
   case 9:
     //MancheOut
+    MancheAction.Out();
     break;
   case 10:
     //MancheIn
+    MancheAction.In();
     break;
   case 11:
     //OutAll
@@ -99,76 +190,22 @@ void subscriberOrder( const std_msgs::Int16 &msg){
     ElevatorRobot.PuissanceOFF();
     ElevatorRobot.LedOFF();
     break;
+  case 15:
+    //Drapeau out
+    DrapeauAction.OutFlag();
+    break;
+  case 16:
+    //Drapeau in
+    DrapeauAction.InFlag();
+    break;
   default:
-   // digitalWrite(22, HIGH-digitalRead(22));   // blink the led
+    digitalWrite(22, HIGH-digitalRead(22));   // blink the led
     break;
   }
   //response.data = 1;
   //arduinoState.publish( &response);
   traitementROS = false;
-}
 
-void subscriberVision( const std_msgs::Int16 &msg){
-  valVision = msg;
-//if(msg.position.y != 2){
- // digitalWrite(22, HIGH-digitalRead(22));   // blink the led
-//}
-}
-
-ros::Subscriber<std_msgs::Int16> order_sub("arduinoOrder", &subscriberOrder);
-//ros::Subscriber<geometry_msgs::Pose> vision_sub("positionGoblet", &subscriberVision);
-ros::Subscriber<std_msgs::Int16> vision_sub("positionGoblet", &subscriberVision);
-
-
-void setup()
-{
-
-  pinMode(7, INPUT);//tirette
-  TiretteStateRos.data = false;
-
-  //pinMode(22, OUTPUT);
-  nh.initNode();
-
-  nh.advertise(arduinoTirette);
-
-  nh.advertise(arduinoState);
-
-  response.data = 1;
-  arduinoState.publish( &response);
-  nh.spinOnce();
-
-  response.data = 1;
-  
-  nh.subscribe(order_sub);
-  nh.subscribe(vision_sub);
-
-  SetupRobot.SetAll();
-  DrapeauAction.InFlag();
-
-}
-
-void loop()
-{
-  if(traitementROS==false){
-    response.data = 1;
-    arduinoState.publish( &response);
-    nh.spinOnce();
- }else{
-    response.data = 2;
-    arduinoState.publish( &response);
-    nh.spinOnce();
- }
-   Tirette = digitalRead(7);
-   TiretteStateRos.data = Tirette;
-   arduinoTirette.publish(&TiretteStateRos); 
-   nh.spinOnce();
-
-  
-//  arduinoState.publish( &response);
-//  nh.spinOnce();
-//  response.data = 1;
-
-  delay(100);
 }
 
 void ShootPhoto(){
@@ -181,7 +218,7 @@ void ShootPhoto(){
 
 void GobeletEnPosi(){
   //nh.spinOnce();
-  int ValGobletVision = valVision.data; 
+  int ValGobletVision = valVision; 
   ArmRobot.GetGobelet(900,true,BlueSide);
 //  if(ValGobletVision > 2000){
 //      ArmRobot.GetGobelet(900,true,BlueSide);
@@ -190,16 +227,6 @@ void GobeletEnPosi(){
 //  }
   
 }
-
-
-
-
-
-
-
-
-
-
 
 void ProgTest(){
   //Serial.println("test");

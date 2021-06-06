@@ -15,6 +15,7 @@ class Arm{
  void Parking();
  void Transport();
  void GetGobelet(int,int,int);
+ void AlumePhare();
 
 
   private:

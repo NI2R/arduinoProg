@@ -17,9 +17,9 @@ void Manche::MoveAndWait(double val){
 }
 
 void Manche::In(){ //val a définir pour le départ
-  MoveAndWait(1000);
+  MoveAndWait(900);
 }
 
 void Manche::Out(){ //val a définir pour la fin
-  MoveAndWait(0);
+  MoveAndWait(100);
 }
